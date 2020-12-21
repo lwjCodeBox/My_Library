@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "WJ_String.h"
 
 WJ_String::WJ_String()
