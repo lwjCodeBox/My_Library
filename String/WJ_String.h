@@ -57,7 +57,7 @@ public:
 		return memcmp(ar_str1.mp_string, ar_str2.mp_string, ar_str1.m_length << 1) != 0; // "<< 1"하는 방식은 "* 2"와 같은 표현 방식이다.
 	}
 
-	wchar_t *GetString_cptr() { return mp_string; }
+	wchar_t *GetStrBuffer() { return mp_string; }
 
 // 디버깅용으로 사용
 public:
