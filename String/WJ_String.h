@@ -62,6 +62,8 @@ public:
 // 디버깅용으로 사용
 public:
 	// 디버깅용으로 사용하고 콘솔창에는 출력 (X)
+	void DbgLog(LPCSTR ap_str, ...);
+	// 디버깅용으로 사용하고 콘솔창에는 출력 (X)
 	void DbgLogW(const wchar_t *ap_str, ...);
 	// 디버깅용으로 사용하고 콘솔창에는 출력 (0)
 	void DbgLogW_P(const wchar_t *ap_str, ...);

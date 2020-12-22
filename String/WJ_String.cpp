@@ -112,6 +112,34 @@ int WJ_String::GetLength()
     return m_length;
 }
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+// https://m.blog.naver.com/PostView.nhn?blogId=sinarn&logNo=130180639399&proxyReferer=https:%2F%2Fwww.google.com%2F
+void WJ_String::DbgLog(LPCSTR ap_str, ...)
+{
+    va_list args;
+
+    // 시작
+    va_start(args, ap_str);
+
+    // "abc"가 들어오면 문자열은 크기는 3이지만 맨 마지막 위치한 곳에 '\0'을 추가 해야하기 때문에
+    // 문자열의 크기는 4가 되야한다.
+    // 가변인자로 이루어진 문자열의 크기를 구한다. (_vscprintf doesn't count terminating '\0')
+    int len = _vscprintf(ap_str, args) + 1; // _vscprintf for '\0'
+
+    // 위에서 구한 크기 +1만큼 pBuf에 메모리를 할당한다.
+    char *pBuf = (char *)malloc(sizeof(char) * len);
+
+    if (pBuf) {
+        // 문자열을 pBuf에 입력한다.
+        // 문자열 크기가 4가 되어야 하지만 vsprintf() 반환 값이 3인 이유는 '\0' 전까지의 문자열을 의미함.
+        int size = vsprintf(pBuf, ap_str, args);
+        OutputDebugStringA(pBuf);
+        printf("[len %d] [size %d] %s", len, size, pBuf);
+        free(pBuf);
+    }
+
+    va_end(args);
+}
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 void WJ_String::DbgLogW(const wchar_t *ap_str, ...)
 {
