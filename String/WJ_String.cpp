@@ -13,16 +13,31 @@ WJ_String::WJ_String(const wchar_t *ap_string)
 }
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
-//WJ_String::WJ_String(const char *ap_string)
-//{
-//    mp_string = NULL;
-//    AsciiToUnicode((char *)ap_string);
-//}
+WJ_String::WJ_String(const char *ap_string)
+{
+    mp_string = NULL;
+    AsciiToUnicode((char *)ap_string);
+}
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 
 WJ_String::WJ_String(const WJ_String &ar_string)
 {
     InitialObject(ar_string.mp_string);
+}
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+// https://lwj789.tistory.com/45
+void WJ_String::AsciiToUnicode(char *ap_string)
+{
+    wchar_t strUnicode[256] = { 0, };
+    char	strUTF8[256] = { 0, };
+
+    //strcpy_s(strUTF8, 256, "UTF-8글자"); // UTF-8 문자라고 가정하고..
+    strcpy_s(strUTF8, 256, ap_string); // UTF-8 문자라고 가정하고..
+    int nLen = MultiByteToWideChar(CP_UTF8, 0, strUTF8, strlen(strUTF8), NULL, NULL);
+    MultiByteToWideChar(CP_UTF8, 0, strUTF8, strlen(strUTF8), strUnicode, nLen);
+
+    InitialObject(strUnicode);
 }
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 

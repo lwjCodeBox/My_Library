@@ -12,12 +12,13 @@ protected:
 
 public:
 	WJ_String(); // 기본 생성자
-	//WJ_String(const char *ap_string);
+	WJ_String(const char *ap_string);
 	WJ_String(const wchar_t *ap_string);
 	WJ_String(const WJ_String &ar_string); // 복사 생성자.
 
 	virtual ~WJ_String();
 
+	void AsciiToUnicode(char *ap_string);
 	void InitialObject(const wchar_t *ap_string); // 객체 초기화 함수
 	/*inline*/ int GetLength();				// 문자열의 길이를 알려주는 함수
 	/*inline*/ const wchar_t *GetString();	// 문자열의 내용을 알려주는 함수
