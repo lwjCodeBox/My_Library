@@ -14,10 +14,13 @@
 // CWJDialogApp:
 // See WJDialog.cpp for the implementation of this class
 //
-
+typedef BOOL(WINAPI *lpfn) (HWND hWnd, COLORREF cr, BYTE bAlpha, DWORD dwFlags);
 class CWJDialogApp : public CWinApp
 {
 public:
+	lpfn			SetLayeredWindowAttributes;
+
+public:	
 	CWJDialogApp();
 
 // Overrides

@@ -39,6 +39,12 @@ BOOL CWJDialogApp::InitInstance()
 {
 	CWinApp::InitInstance();
 
+
+	//  get the function pointer for SetLayeredWindowAttributes in User32.dll
+	HMODULE hUser32 = GetModuleHandle(_T("USER32.DLL"));
+	SetLayeredWindowAttributes = (lpfn)GetProcAddress(hUser32, "SetLayeredWindowAttributes");
+	if (SetLayeredWindowAttributes == NULL)
+		AfxMessageBox(L"Layering is not supported in this version of Windows", MB_ICONEXCLAMATION);
 	CWJDialogDlg dlg;
 	m_pMainWnd = &dlg;
 	dlg.DoModal();

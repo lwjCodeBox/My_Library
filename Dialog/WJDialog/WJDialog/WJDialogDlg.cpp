@@ -21,6 +21,8 @@ CWJDialogDlg::CWJDialogDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_WJDIALOG_DIALOG, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+
+	m_bDraging = FALSE;
 }
 
 void CWJDialogDlg::DoDataExchange(CDataExchange* pDX)
@@ -33,6 +35,8 @@ BEGIN_MESSAGE_MAP(CWJDialogDlg, CDialogEx)
 	ON_WM_QUERYDRAGICON()
 	ON_BN_CLICKED(IDOK, &CWJDialogDlg::OnBnClickedOk)
 	ON_BN_CLICKED(IDCANCEL, &CWJDialogDlg::OnBnClickedCancel)
+	ON_WM_ENTERSIZEMOVE()
+	ON_WM_EXITSIZEMOVE()
 END_MESSAGE_MAP()
 
 
@@ -101,4 +105,30 @@ void CWJDialogDlg::OnBnClickedCancel()
 {
 	// TODO: Add your control notification handler code here
 	CDialogEx::OnCancel();
+}
+
+
+void CWJDialogDlg::OnEnterSizeMove()
+{
+	if (!m_bDraging)
+	{
+		m_bDraging = TRUE;
+		::SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE) ^ WS_EX_LAYERED);
+		theApp.SetLayeredWindowAttributes(m_hWnd, 0, 176, LWA_ALPHA);
+		::RedrawWindow(m_hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
+	}
+	CDialogEx::OnEnterSizeMove();
+}
+
+
+void CWJDialogDlg::OnExitSizeMove()
+{
+	if (m_bDraging)
+	{
+		m_bDraging = FALSE;
+		::SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);
+		::RedrawWindow(m_hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
+	}
+
+	CDialogEx::OnExitSizeMove();
 }

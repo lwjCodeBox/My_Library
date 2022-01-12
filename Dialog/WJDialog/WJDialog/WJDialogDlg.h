@@ -8,6 +8,9 @@
 // CWJDialogDlg dialog
 class CWJDialogDlg : public CDialogEx
 {
+public:
+	BOOL		m_bDraging;
+
 // Construction
 public:
 	CWJDialogDlg(CWnd* pParent = nullptr);	// standard constructor
@@ -33,4 +36,6 @@ protected:
 public:
 	afx_msg void OnBnClickedOk();
 	afx_msg void OnBnClickedCancel();
+	afx_msg void OnEnterSizeMove();
+	afx_msg void OnExitSizeMove();
 };
