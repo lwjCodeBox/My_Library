@@ -1,6 +1,7 @@
 #pragma once
 #include <stdio.h>
 #include <Windows.h>
+#include <iostream>
 
 // WJ_String 클래스는 문자열을 편리하게 괸라할 수 있도록 만든 클래스.
 // https://blog.naver.com/tipsware/221140629230
@@ -37,7 +38,7 @@ public:
 	void operator=(const WJ_String &ar_string);
 	// 문자열 확장(append)를 위한 연산자 오버로딩
 	void operator+=(const WJ_String &ar_str);
-	
+
 	// 문자열을 더하기 위한 연산자 오버로딩
 	friend WJ_String operator+(const WJ_String &ar_str1, const WJ_String &ar_str2)
 	{
@@ -58,9 +59,25 @@ public:
 		return memcmp(ar_str1.mp_string, ar_str2.mp_string, ar_str1.m_length << 1) != 0; // "<< 1"하는 방식은 "* 2"와 같은 표현 방식이다.
 	}
 
+
+	friend std::wostream &operator << (std::wostream &os, const WJ_String &s)
+	{
+		os << s.mp_string;
+		return os;
+	}
+
+	friend std::wistream &operator >> (std::wistream &is, WJ_String &s)
+	{
+		wchar_t buf[1024];
+		is >> buf;
+		s.SetString(buf);
+
+		return is;
+	}
+
 	wchar_t *GetStrBuffer() { return mp_string; }
 
-// 디버깅용으로 사용
+	// 디버깅용으로 사용
 public:
 	// 디버깅용으로 사용하고 콘솔창에는 출력 (X)
 	void DbgLog(LPCSTR ap_str, ...);
