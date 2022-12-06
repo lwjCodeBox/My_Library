@@ -1,15 +1,14 @@
+#pragma once
 #include "LinkedList.h"
 
-int main( void )
+int main(void)
 {
-    int   i       = 0;
-    int   Count   = 0;
-    Node* List    = NULL;
-    Node* Current = NULL;
-    Node* NewNode = NULL;
+    Node *List = NULL;
+    Node *NewNode = NULL;
 
+    puts("+-+-+-Start+-+-+-\n");
     //  노드 5개 추가 
-    for ( i = 0; i<5; i++ )
+    for (int i = 0; i < 5; i++)
     {
         NewNode = SLL_CreateNode(i);
         SLL_AppendNode(&List, NewNode);
@@ -22,42 +21,24 @@ int main( void )
     SLL_InsertNewHead(&List, NewNode);
 
     //  리스트 출력 
-    Count = SLL_GetNodeCount(List);
-    for ( i = 0; i<Count; i++ )
-    {
-        Current = SLL_GetNodeAt(List, i);
-        printf("List[%d] : %d\n", i, Current->Data);
-    }
+    SLL_ShowAllData(List);
 
     //  리스트의 세번째 노드 뒤에 새 노드 삽입 
-    printf("\nInserting 3000 After [2]...\n\n");
+    printf("\nInserting 3000 After [2]...\n");
+    SSL_InsertNodeData(&List, 0, 2222);
+    SLL_ShowAllData(List);
 
-    Current = SLL_GetNodeAt(List, 2);
-    NewNode  = SLL_CreateNode(3000);
+    printf("\nInserting 7777 After [4]...\n");
+    SSL_InsertNodeData(&List, 4, 4444);
+    SLL_ShowAllData(List);
 
-    SLL_InsertAfter(Current, NewNode);
-
-    //  리스트 출력 
-    Count = SLL_GetNodeCount(List);
-    for ( i = 0; i<Count; i++ )
-    {
-        Current = SLL_GetNodeAt(List, i);
-        printf("List[%d] : %d\n", i, Current->Data);
-    }
+    printf("\nInserting 6666 After [6]...\n");
+    SSL_InsertNodeData(&List, 6, 6666);
+    SLL_ShowAllData(List);
 
     //  모든 노드를 메모리에서 제거     
     printf("\nDestroying List...\n");
-
-    for ( i = 0; i<Count; i++ )
-    {
-        Current = SLL_GetNodeAt(List, 0);
-
-        if ( Current != NULL ) 
-        {
-            SLL_RemoveNode(&List, Current);
-            SLL_DestroyNode(Current);
-        }
-    }
-
+    SLL_DestroyAllNode(List);
+    
     return 0;
 }
