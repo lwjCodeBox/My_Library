@@ -52,7 +52,6 @@ BOOL CWJDialogDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
-
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
@@ -81,7 +80,12 @@ void CWJDialogDlg::OnPaint()
 	}
 	else
 	{
-		CDialogEx::OnPaint();
+		// 클라이언트 DC를 선언한다.
+		CClientDC dc(this);
+		// 클라이언트 DC로 사각형을 그린다.
+		dc.Rectangle(10, 10, 100, 100);		
+		
+		//CDialogEx::OnPaint(); //http://www.tipssoft.com/bulletin/board.php?bo_table=FAQ&wr_id=700
 	}
 }
 
@@ -117,7 +121,8 @@ void CWJDialogDlg::OnEnterSizeMove()
 		theApp.SetLayeredWindowAttributes(m_hWnd, 0, 176, LWA_ALPHA);
 		::RedrawWindow(m_hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
 	}
-	CDialogEx::OnEnterSizeMove();
+	//Invalidate(true);
+	//CDialogEx::OnEnterSizeMove();
 }
 
 
@@ -129,6 +134,6 @@ void CWJDialogDlg::OnExitSizeMove()
 		::SetWindowLong(m_hWnd, GWL_EXSTYLE, GetWindowLong(m_hWnd, GWL_EXSTYLE) & ~WS_EX_LAYERED);
 		::RedrawWindow(m_hWnd, NULL, NULL, RDW_ERASE | RDW_INVALIDATE | RDW_FRAME | RDW_ALLCHILDREN);
 	}
-
-	CDialogEx::OnExitSizeMove();
+	//Invalidate(true);
+	//CDialogEx::OnExitSizeMove();
 }

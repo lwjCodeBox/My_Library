@@ -18,7 +18,7 @@ typedef BOOL(WINAPI *lpfn) (HWND hWnd, COLORREF cr, BYTE bAlpha, DWORD dwFlags);
 class CWJDialogApp : public CWinApp
 {
 public:
-	lpfn			SetLayeredWindowAttributes;
+	lpfn	SetLayeredWindowAttributes;
 
 public:	
 	CWJDialogApp();
