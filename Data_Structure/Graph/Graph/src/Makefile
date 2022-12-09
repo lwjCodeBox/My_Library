@@ -9,6 +9,6 @@ SRCS = $(OBJS:.o=.c)
 test: $(OBJS)
 	$(CC) -o Graph_exe $(OBJS) 
 clean: 	
-	rm -rf $(OBJS) Graph_exe x64 Debug
+	rm -rf $(OBJS) Graph_exe
 distclean: 
 	rm -rf $(OBJS) Graph test

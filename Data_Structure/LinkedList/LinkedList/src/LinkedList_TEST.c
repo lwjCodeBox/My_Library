@@ -6,7 +6,7 @@ int main(void)
     Node *List = NULL;
     Node *NewNode = NULL;
 
-    puts("+-+-+-Start+-+-+-\n");
+    puts("+-+-+- Start +-+-+-\n");
     //  노드 5개 추가 
     for (int i = 0; i < 5; i++)
     {
@@ -40,5 +40,6 @@ int main(void)
     printf("\nDestroying List...\n");
     SLL_DestroyAllNode(List);
     
+    puts("+-+-+- End +-+-+-\n");
     return 0;
 }
