@@ -59,7 +59,6 @@ Node *LLS_Pop(LinkedListStack *Stack)
     //  LLS_Pop() 함수가 반환할 최상위 노드 저장 
     Node *TopNode = Stack->Top;
 
-
     if (Stack->List == Stack->Top)
     {
         Stack->List = NULL;
@@ -78,6 +77,15 @@ Node *LLS_Pop(LinkedListStack *Stack)
         Stack->Top = CurrentTop;
         Stack->Top->NextNode = NULL;
     }
+
+    printf("Popped: %s, ", TopNode->Data);
+
+    LLS_DestroyNode(TopNode);
+
+    if (!LLS_IsEmpty(Stack))
+        printf("Current Top: %s\n", LLS_Top(Stack)->Data);
+    else
+        printf("Stack Is Empty.\n");
 
     return TopNode;
 }

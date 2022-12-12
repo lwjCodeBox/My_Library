@@ -2,42 +2,32 @@
 
 int main(void)
 {
-    int i = 0;
     int Count = 0;
-    Node *Popped;
-
     LinkedListStack *Stack;
 
     LLS_CreateStack(&Stack);
 
     LLS_Push(Stack, LLS_CreateNode("abc"));
+    printf("Stack: %s\n", LLS_Top(Stack)->Data);
+
     LLS_Push(Stack, LLS_CreateNode("def"));
+    printf("Stack: %s\n", LLS_Top(Stack)->Data);
+
     LLS_Push(Stack, LLS_CreateNode("efg"));
+    printf("Stack: %s\n", LLS_Top(Stack)->Data);
+
     LLS_Push(Stack, LLS_CreateNode("hij"));
+    printf("Stack: %s\n", LLS_Top(Stack)->Data);
 
     Count = LLS_GetSize(Stack);
-    printf("Size: %d, Top: %s\n\n",
-        Count, LLS_Top(Stack)->Data);
+    printf("Size: %d, Top: %s\n\n", Count, LLS_Top(Stack)->Data);
 
-    for (i = 0; i < Count; i++)
+    for (int i = 0; i < Count; i++)
     {
         if (LLS_IsEmpty(Stack))
             break;
 
-        Popped = LLS_Pop(Stack);
-
-        printf("Popped: %s, ", Popped->Data);
-
-        LLS_DestroyNode(Popped);
-
-        if (!LLS_IsEmpty(Stack))
-        {
-            printf("Current Top: %s\n", LLS_Top(Stack)->Data);
-        }
-        else
-        {
-            printf("Stack Is Empty.\n");
-        }
+        LLS_Pop(Stack);       
     }
 
     LLS_DestroyStack(Stack);
