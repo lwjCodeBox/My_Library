@@ -8,9 +8,13 @@ int main( void )
     AS_CreateStack(&Stack, 10);
     
     AS_Push(Stack, 3);
+    printf("%d\n", AS_Top(Stack));
     AS_Push(Stack, 37);
+    printf("%d\n", AS_Top(Stack));
     AS_Push(Stack, 11);
+    printf("%d\n", AS_Top(Stack));
     AS_Push(Stack, 12);
+    printf("%d\n", AS_Top(Stack));
 
     printf( "Capacity: %d, Size: %d, Top: %d\n\n", 
         Stack->Capacity, AS_GetSize(Stack), AS_Top(Stack) );

@@ -24,14 +24,12 @@ void AS_DestroyStack(ArrayStack* Stack)
 
 void AS_Push(ArrayStack* Stack, ElementType Data)
 {
-    Stack->Top++;
-    Stack->Nodes[Stack->Top].Data = Data;
+    Stack->Nodes[++Stack->Top].Data = Data;
 }
 
 ElementType AS_Pop(ArrayStack* Stack)
 {
-    int Position = Stack->Top--;
-    return Stack->Nodes[Position].Data;
+    return Stack->Nodes[Stack->Top--].Data;
 }
 
 ElementType AS_Top(ArrayStack* Stack)

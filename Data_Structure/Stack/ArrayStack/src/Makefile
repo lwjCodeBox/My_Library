@@ -8,8 +8,16 @@ SRCS = $(OBJS:.o=.c)
 
 test: $(OBJS)
 	$(CC) -o ArrayStack $(OBJS) 
+	./ArrayStack
+
+c: $(OBJS)
+	$(CC) -o ArrayStack $(OBJS)
+
+run:
+	./ArrayStack
 
 clean: 
 	rm -rf $(OBJS)
-distclean: 
+
+allclean: 
 	rm -rf $(OBJS) ArrayStack test
