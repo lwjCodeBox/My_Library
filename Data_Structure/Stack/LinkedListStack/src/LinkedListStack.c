@@ -52,6 +52,8 @@ void LLS_Push(LinkedListStack *Stack, Node *NewNode)
 
     //  스택의 Top 필드에 새 노드의 주소를 등록한다. 
     Stack->Top = NewNode;
+    
+    printf("Push: %s\n", Stack->Top->Data);
 }
 
 Node *LLS_Pop(LinkedListStack *Stack)
