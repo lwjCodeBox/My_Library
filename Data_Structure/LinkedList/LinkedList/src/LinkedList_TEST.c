@@ -36,6 +36,15 @@ int main(void)
     SSL_InsertNodeData(&List, 6, 6666);
     SLL_ShowAllData(List);
 
+    // remove node
+    puts("\nRemove node [0]");
+    SLL_RemoveNode(&List, 0);
+    SLL_ShowAllData(List);
+
+    puts("\nRemove node [6]");
+    SLL_RemoveNode(&List, 6);
+    SLL_ShowAllData(List);
+
     //  모든 노드를 메모리에서 제거     
     printf("\nDestroying List...\n");
     SLL_DestroyAllNode(List);

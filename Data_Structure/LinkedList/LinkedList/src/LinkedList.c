@@ -59,23 +59,26 @@ void  SLL_InsertNewHead(Node **ap_head, Node *ap_new_node)
 }
 
 //  노드 제거 
-void SLL_RemoveNode(Node **ap_head, Node *ap_remove)
+void SLL_RemoveNode(Node **ap_head, int a_index)
 {
-    if (*ap_head == ap_remove)
+    Node *remove_node = SLL_GetNodeAt(*ap_head, a_index);
+    if (*ap_head == remove_node)
     {
-        *ap_head = ap_remove->NextNode;
+        *ap_head = remove_node->NextNode;
     }
     else
     {
         Node *Current = *ap_head;
-        while (Current != NULL && Current->NextNode != ap_remove)
+        while (Current != NULL && Current->NextNode != remove_node)
         {
             Current = Current->NextNode;
         }
 
         if (Current != NULL)
-            Current->NextNode = ap_remove->NextNode;
+            Current->NextNode = remove_node->NextNode;
     }
+
+    SLL_DestroyNode(remove_node);
 }
 
 //  노드 탐색 
@@ -124,18 +127,17 @@ void  SLL_ShowAllData(Node *node)
 // 모든 노드 파괴
 void SLL_DestroyAllNode(Node *node)
 {
-    Node *pCurrent = NULL;
-    int count = SLL_GetNodeCount(node);
-    for (int i = 0; i < count; i++)
-    {
-        pCurrent = SLL_GetNodeAt(node, 0);
+    Node *pNext_Node = NULL;
+    Node *remove_node = node;
 
-        if (pCurrent != NULL)
-        {
-            printf("Destory [add: 0x%p] List[%d] : %d \n", pCurrent, i, pCurrent->Data);
-            SLL_RemoveNode(&node, pCurrent);
-            SLL_DestroyNode(pCurrent);
-        }
+    int i = 0;
+    while (remove_node != NULL)
+    {
+        pNext_Node = remove_node->NextNode;
+        printf("Destory [add: 0x%p] List[%d] : %d \n", remove_node, i, remove_node->Data);
+        free(remove_node);
+        ++i;
+        remove_node = pNext_Node;
     }
 }
 
