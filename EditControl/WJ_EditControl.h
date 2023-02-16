@@ -1,6 +1,13 @@
 #ifndef _WJ_EDIT_CONTROLH_
 #define _WJ_EDIT_CONTROLH_
 
+/*
+	* Version : 1.0
+	* 속성 -> 추가 디렉토리
+		프로젝트 소스 위치 추가. (#include "pch.h" 때문에 함.)
+		ex) C:\Users\lwj79\Desktop\My_Workspace\_MFC\Raon_Helper\Raon_Helper;
+*/
+
 // WJ_EditControl
 class WJ_EditControl : public CWnd
 {
@@ -20,6 +27,9 @@ public:
 
 protected:
 	DECLARE_MESSAGE_MAP()
+		
+	void Activity_EditControl_Color();
+	void Disabled_EditControl_Color();
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
@@ -28,6 +38,7 @@ public:
 	afx_msg void OnSetFocus(CWnd *pOldWnd);
 	afx_msg void OnKillFocus(CWnd *pNewWnd);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
+	afx_msg void OnNcPaint();
 };
 
 #endif
