@@ -25,7 +25,49 @@ BEGIN_MESSAGE_MAP(WJ_EditControl, CWnd)
 	ON_WM_NCPAINT()
 END_MESSAGE_MAP()
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+BOOL WJ_EditControl::GetCurrentInputMode()
+{
+	DWORD conv, sentence;
+	HIMC h_imc = ImmGetContext(m_hWnd);
 
+	// IME(input method editor) 상태를 얻는다.
+	ImmGetConversionStatus(h_imc, &conv, &sentence);
+
+	ImmReleaseContext(m_hWnd, h_imc);
+	if (conv & IME_CMODE_LANGUAGE) return TRUE;  // 한글 상태임...
+
+	return FALSE;
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+void WJ_EditControl::SetCurrentInputMode(BOOL parm_mode)
+{
+	DWORD conv, sentence;
+
+	HIMC h_imc = ImmGetContext(m_hWnd);
+	// IME(input method editor) 상태를 얻는다.
+	ImmGetConversionStatus(h_imc, &conv, &sentence);
+
+	if (parm_mode == TRUE) {
+		// 한글 입력 상태였다면 상태를 제거한다.
+		conv = conv & (~IME_CMODE_LANGUAGE);
+		// 영문 입력 상태로 설정한다.
+		conv = conv | IME_CMODE_CHARCODE;
+	}
+	else {
+		// 영문 입력 상태였다면 상태를 제거한다.
+		conv = conv & (~IME_CMODE_CHARCODE);
+		// 한글 입력 상태로 설정한다.
+		conv = conv | IME_CMODE_LANGUAGE;
+	}
+
+	// IME 상태를 설정한다.
+	ImmSetConversionStatus(h_imc, conv, sentence);
+	ImmReleaseContext(m_hWnd, h_imc);
+}
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 // WJ_EditControl 메시지 처리기
 int WJ_EditControl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
@@ -145,7 +187,7 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		// 계산된 캐럿의 위치에 캐럿이 이동하게 한다.
 		::SetCaretPos(m_caret_x, m_caret_y);
 	}
-	else if (nChar == 37) // 방향키 (<-)
+	else if (nChar == VK_LEFT) // 방향키 (<-)
 	{
 		if (m_caret_x > 5) 
 		{
@@ -155,7 +197,7 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			::SetCaretPos(m_caret_x - 1, m_caret_y);
 		}
 	}
-	else if (nChar == 39) // 방향키 (->)
+	else if (nChar == VK_RIGHT) // 방향키 (->)
 	{
 		SIZE temp_size;
 		// 문자열이 출력되었을 때 폭과 높이 정보를 얻는다.
@@ -166,8 +208,13 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			// 캐럿을 출력된 문자열 뒤에 위치하도록 위치를 조정한다.
 			m_caret_x += m_font_width;
 			// 계산된 캐럿의 위치에 캐럿이 이동하게 한다.
-			::SetCaretPos(m_caret_x, m_caret_y);
+			::SetCaretPos(m_caret_x - 1, m_caret_y);
 		}
+	}
+	else if (nChar == 229)
+	{
+		//AfxMessageBox(L"han", 0);
+		SetCurrentInputMode(GetCurrentInputMode());	
 	}
 
 	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
@@ -206,7 +253,8 @@ void WJ_EditControl::OnLButtonDown(UINT nFlags, CPoint point)
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnNcPaint()
 {
-	Activity_EditControl_Color();
+	if (::GetFocus() != m_hWnd) Disabled_EditControl_Color();
+	else						Activity_EditControl_Color();
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

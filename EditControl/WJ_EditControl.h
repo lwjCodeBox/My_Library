@@ -7,6 +7,9 @@
 		프로젝트 소스 위치 추가. (#include "pch.h" 때문에 함.)
 		ex) C:\Users\lwj79\Desktop\My_Workspace\_MFC\Raon_Helper\Raon_Helper;
 */
+
+#include <imm.h>
+#pragma comment(lib, "imm32.lib")
 #define TEXT_X_POS	3
 
 // WJ_EditControl
@@ -32,7 +35,9 @@ public:
 
 protected:
 	DECLARE_MESSAGE_MAP()
-		
+
+	BOOL GetCurrentInputMode();
+	void SetCurrentInputMode(BOOL parm_mode);
 	void Activity_EditControl_Color();
 	void Disabled_EditControl_Color();
 
