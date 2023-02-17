@@ -48,8 +48,8 @@ int WJ_EditControl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		DEFAULT_PITCH   |   FF_SWISS, "Arial "); // 자간과 폰트
 	*/
 
-	// 문자열 출력에 사용할 글꼴을 생성한다.
-	mh_font = ::CreateFont(0xFFFFFFEB, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET,
+	// 문자열 출력에 사용할 글꼴을 생성한다. 0xFFFFFFEB
+	mh_font = ::CreateFont(20, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET,
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 		DEFAULT_PITCH | FF_SWISS, L"Consolas");
 
@@ -71,9 +71,18 @@ int WJ_EditControl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	// 생성된 글꼴을 지정한다.
 	SelectObject(mh_mem_dc, mh_font);
 
+	SIZE temp_size;
+	::GetTextExtentPoint(mh_mem_dc, L" ", 1, &temp_size);
+	m_font_width = temp_size.cx;
+	m_font_height = temp_size.cy;
+
+	m_caret_y = (int)m_font_height/5;
+	m_text_cy = m_caret_y + 1;
+	
 	return 0;
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnDestroy()
 {
 	CWnd::OnDestroy();
@@ -86,6 +95,7 @@ void WJ_EditControl::OnDestroy()
 	DeleteObject(mh_font);
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnPaint()
 {
 	CPaintDC dc(this);
@@ -94,6 +104,7 @@ void WJ_EditControl::OnPaint()
 	m_mem_image.Draw(dc, 0, 0);
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
 	WORD key_data = 0;
@@ -102,14 +113,16 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	// 현재 키 상태를 기반으로 입력된 문자 값을 얻는다.
 	ToAscii(nChar, MAKELPARAM(nRepCnt, nFlags), m_key_state, &key_data, 0);
 
-	if (key_data) // 입력된 문자가 있는 지 확인, Shift 키 입력시에는 0으로 처리됨
+	// 입력된 문자가 있는 지 확인, Shift 키 입력시에는 0으로 처리됨 
+	// push ESC key(27)
+	if (key_data != 0 && key_data != 27) 
 	{  
 		// 배경을 검은색으로 채워서 이전 내용을 지운다.
 		Rectangle(mh_mem_dc, -2, -1, m_mem_image.GetWidth() + 1, m_mem_image.GetHeight() + 1); //Rectangle(mh_mem_dc, 0, 0, m_mem_image.GetWidth(), m_mem_image.GetHeight());
 
 		if (key_data == 8) // push Backspace key
 			m_str.Delete(m_str.GetLength() - 1);
-		else if(key_data != 0)
+		else
 		{
 			CString str;
 			// 입력된 문자 값을 문자로 변경한다.
@@ -117,27 +130,50 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			m_str += str;  // 입력된 문자를 문자열에 추가한다.
 		}
 
-		if (key_data) {
-			// 입력된 문자는 노란색으로 출력한다.
-			SetTextColor(mh_mem_dc, RGB(255, 255, 0));
-			// 입력된 문자를 화면에 출력한다.
-			TextOut(mh_mem_dc, 3, 2, m_str, m_str.GetLength());
-			// 화면을 갱신하여 입력된 문자가 화면에 표시되게 한다.
-			Invalidate(0);
-
-			SIZE temp_size;
-			// 문자열이 출력되었을 때 폭과 높이 정보를 얻는다.
-			::GetTextExtentPoint(mh_mem_dc, m_str, m_str.GetLength(), &temp_size);
+		// 입력된 문자는 노란색으로 출력한다.
+		SetTextColor(mh_mem_dc, RGB(255, 255, 0));		
+		// 입력된 문자를 화면에 출력한다.
+		TextOut(mh_mem_dc, TEXT_X_POS, m_text_cy, m_str, m_str.GetLength());
+		// 화면을 갱신하여 입력된 문자가 화면에 표시되게 한다.
+		Invalidate(0);
+		
+		SIZE temp_size;
+		// 문자열이 출력되었을 때 폭과 높이 정보를 얻는다.
+		::GetTextExtentPoint(mh_mem_dc, m_str, m_str.GetLength(), &temp_size);
+		// 캐럿을 출력된 문자열 뒤에 위치하도록 위치를 조정한다.
+		m_caret_x = 5 + temp_size.cx;
+		// 계산된 캐럿의 위치에 캐럿이 이동하게 한다.
+		::SetCaretPos(m_caret_x, m_caret_y);
+	}
+	else if (nChar == 37) // 방향키 (<-)
+	{
+		if (m_caret_x > 5) 
+		{
 			// 캐럿을 출력된 문자열 뒤에 위치하도록 위치를 조정한다.
-			m_caret_x = 5 + temp_size.cx;
+			m_caret_x -= m_font_width;
 			// 계산된 캐럿의 위치에 캐럿이 이동하게 한다.
-			::SetCaretPos(m_caret_x, 4);
+			::SetCaretPos(m_caret_x - 1, m_caret_y);
+		}
+	}
+	else if (nChar == 39) // 방향키 (->)
+	{
+		SIZE temp_size;
+		// 문자열이 출력되었을 때 폭과 높이 정보를 얻는다.
+		::GetTextExtentPoint(mh_mem_dc, m_str, m_str.GetLength(), &temp_size);
+
+		if (m_caret_x <= temp_size.cx)
+		{
+			// 캐럿을 출력된 문자열 뒤에 위치하도록 위치를 조정한다.
+			m_caret_x += m_font_width;
+			// 계산된 캐럿의 위치에 캐럿이 이동하게 한다.
+			::SetCaretPos(m_caret_x, m_caret_y);
 		}
 	}
 
 	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnSetFocus(CWnd *pOldWnd)
 {
 	CWnd::OnSetFocus(pOldWnd);
@@ -145,6 +181,7 @@ void WJ_EditControl::OnSetFocus(CWnd *pOldWnd)
 	Activity_EditControl_Color();
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnKillFocus(CWnd *pNewWnd)
 {
 	CWnd::OnKillFocus(pNewWnd);
@@ -157,7 +194,7 @@ void WJ_EditControl::OnKillFocus(CWnd *pNewWnd)
 	::DestroyCaret();
 }
 
-
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// 포커스를 가진 윈도우가 현재 윈도우가 아니라면 현재 윈도우를 포커스 상태로 변경!
@@ -166,12 +203,13 @@ void WJ_EditControl::OnLButtonDown(UINT nFlags, CPoint point)
 	CWnd::OnLButtonDown(nFlags, point);
 }
 
-
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnNcPaint()
 {
 	Activity_EditControl_Color();
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::Activity_EditControl_Color()
 {
 	CWindowDC dc(this);
@@ -192,14 +230,21 @@ void WJ_EditControl::Activity_EditControl_Color()
 		dc.Rectangle(r.left + 1, r.top + 1, r.right - 1, r.bottom - 1);  // 사각형을 그린다.
 	}
 
+	SIZE temp_size;
+	// 문자열이 출력되었을 때 폭과 높이 정보를 얻는다.
+	::GetTextExtentPoint(mh_mem_dc, m_str, m_str.GetLength(), &temp_size);
+	// 캐럿을 출력된 문자열 뒤에 위치하도록 위치를 조정한다.
+	m_caret_x = 5 + temp_size.cx;
+
 	// 폭이 1이고 높이가 18인 캐럿을 생성한다.
-	::CreateCaret(m_hWnd, NULL, 1, 18);
+	::CreateCaret(m_hWnd, NULL, 1, m_font_height + 2);
 	// 생성된 캐럿의 위치를 지정한다.
-	::SetCaretPos(m_caret_x, 4);
+	::SetCaretPos(m_caret_x, m_caret_y);
 	// 캐럿을 화면에 표시한다.
 	::ShowCaret(m_hWnd);
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::Disabled_EditControl_Color()
 {
 	CWindowDC dc(this);

@@ -7,6 +7,7 @@
 		프로젝트 소스 위치 추가. (#include "pch.h" 때문에 함.)
 		ex) C:\Users\lwj79\Desktop\My_Workspace\_MFC\Raon_Helper\Raon_Helper;
 */
+#define TEXT_X_POS	3
 
 // WJ_EditControl
 class WJ_EditControl : public CWnd
@@ -20,6 +21,10 @@ protected:
 	HFONT mh_font;			// 출력할 문자열에 사용할 글꼴
 	CString m_str;			// 입력 문자열을 저장할 문자열 객체
 	int m_caret_x = 5;		// 현재 캐럿의 x축 위치
+	int m_caret_y;			// 현재 캐럿의 y축 위치
+	int m_font_width;		// 문자 너비
+	int m_font_height;		// 문자 높이
+	int m_text_cy;			// 문자 높이 위치
 
 public:
 	WJ_EditControl();
@@ -30,6 +35,7 @@ protected:
 		
 	void Activity_EditControl_Color();
 	void Disabled_EditControl_Color();
+
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnDestroy();
