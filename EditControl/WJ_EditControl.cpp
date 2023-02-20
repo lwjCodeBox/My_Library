@@ -92,7 +92,7 @@ int WJ_EditControl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	*/
 
 	// 문자열 출력에 사용할 글꼴을 생성한다. 0xFFFFFFEB
-	mh_font = ::CreateFont(55, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET,
+	mh_font = ::CreateFont(20, 0, 0, 0, FW_NORMAL, 0, 0, 0, DEFAULT_CHARSET,
 		OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
 		DEFAULT_PITCH | FF_SWISS, L"Consolas");
 
@@ -240,37 +240,30 @@ void WJ_EditControl::Disabled_EditControl_Color()
 	}
 }
 
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+void WJ_EditControl::CopyTextW(CString a_str)
+{
+	int len = a_str.GetLength() << 1;
+	char *aStr = (char *)malloc(len);
+	memset(aStr, 0x00, len);
+	
+	UnicodeToAscii(a_str.GetBuffer(), aStr);
+
+	HGLOBAL ClipData = ::GlobalAlloc(GHND, len);
+	char *lpClip = (char *)::GlobalLock(ClipData);
+	memcpy(lpClip, aStr, len);
+	
+	::GlobalUnlock(ClipData);
+	::OpenClipboard(GetSafeHwnd());
+	::EmptyClipboard();
+	::SetClipboardData(CF_TEXT, ClipData);
+	::CloseClipboard();
+
+	free(aStr);
+}
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
-//int WJ_EditControl::CopyTextFromClipboard(CString *ap_string)
-//{
-//	unsigned int priority_list = CF_TEXT;
-//	HANDLE h_clipboard_data;
-//	char *p_clipboard_data;
-//	int format_info = ::GetPriorityClipboardFormat(&priority_list, 1), len = 0;
-//
-//	if (format_info == CF_TEXT) {  // 클립보드에 저장된 정보가 텍스트 인경우에만 처리한다.
-//		// 클립보드에 있는 비트맵 정보를 얻기 위해서 클립보드를 연다.
-//		if (::OpenClipboard(m_hWnd)) {  // 클립보드를 연다.
-//			// 클립보드에 저장된 정보의 핸들을 얻는다.
-//			h_clipboard_data = ::GetClipboardData(format_info);
-//			if (h_clipboard_data != NULL) {  // 정보를 정상적으로 얻었다면
-//				// 클립보드에 저장된 문자열를 복사하기 위해 클립보드 핸들을 사용하여 
-//				// 문자열이 저장된 메모리의 주소를 얻는다.
-//				p_clipboard_data = (char *)::GlobalLock(h_clipboard_data);
-//				// 클립보드에 저장된 문자열의 길이를 얻는다.
-//				len = strlen(p_clipboard_data);
-//				*ap_string = p_clipboard_data;
-//				// 클립보드에 저장된 데이터 핸들을 다른 프로세스가 사용할 수 있도록 반환한다.
-//				::GlobalUnlock(h_clipboard_data);
-//			}
-//			::CloseClipboard();  // 클립보드를 닫는다.
-//		}
-//	}
-//	return len;  // 복사한 데이터의 크기를 반환한다.
-//}
-
-int WJ_EditControl::CopyTextFromClipboard(CString *ap_string)
+int WJ_EditControl::PasteTextW(CString *ap_string)
 {
 	unsigned int priority_list = CF_TEXT;
 	HANDLE h_clipboard_data;
@@ -289,10 +282,11 @@ int WJ_EditControl::CopyTextFromClipboard(CString *ap_string)
 				// 클립보드에 저장된 문자열의 길이를 얻는다.
 				len = strlen(p_clipboard_data);
 
+				// <--- 원본(https://lwj789.tistory.com/123)에서 3줄 추가. 
 				wchar_t *p_wStr = new wchar_t[len + 1];
 				memset(p_wStr, 0, (len + 1) << 1);				
 				AsciiToUnicode(p_clipboard_data, p_wStr);
-
+				// --->
 				*ap_string = p_wStr;// p_clipboard_data;
 				
 				delete[] p_wStr;
@@ -305,6 +299,7 @@ int WJ_EditControl::CopyTextFromClipboard(CString *ap_string)
 	}
 	return len;  // 복사한 데이터의 크기를 반환한다.
 }
+
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::WriteToEditCtrl(CString ap_string)
 {
@@ -339,11 +334,15 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	if (::GetKeyState(VK_CONTROL) < 0 && nChar == 86)
 	{
 		CString temp_str;
-		CopyTextFromClipboard(&temp_str);   // 클립보드에 복사된 문자열을 가져온다.
+		PasteTextW(&temp_str);   // 클립보드에 복사된 문자열을 가져온다.
 
 		m_str += temp_str;					// 입력된 문자를 문자열에 추가한다.
-		//AfxMessageBox(m_str);
 		WriteToEditCtrl(m_str);
+	}
+	// [Paste] Control + C
+	else if (::GetKeyState(VK_CONTROL) < 0 && nChar == 67)
+	{
+		CopyTextW(m_str);
 	}
 	// 입력된 문자가 있는 지 확인, Shift 키 입력시에는 0으로 처리됨 
 	// push ESC key(27)
@@ -369,10 +368,15 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 		if (m_cur_caret_pos != 0)
 		{
 			SIZE temp_size;
-			wchar_t b[2] = { 0 };
-			
-			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos));// 이원test종(*/13->)
+			wchar_t b[3] = { 0 };
+			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos - 1));// 이원test종(*/13->)
 			::GetTextExtentPoint(mh_mem_dc, b, 1, &temp_size);
+
+			#if(_DEBUG)
+				wchar_t uniStr[1024] = { 0 };
+				wsprintf(uniStr, L"%c (w: %d) (h: %d)\n", m_str.GetAt(m_cur_caret_pos - 1), temp_size.cx, temp_size.cy);
+				OutputDebugString(uniStr);
+			#endif
 
 			m_caret_x -= temp_size.cx;
 			::SetCaretPos(m_caret_x - 2, m_caret_y);
@@ -381,27 +385,42 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	}
 	else if (nChar == VK_RIGHT) // 방향test키 (->)
 	{
-		SIZE temp_size;
-		// 문자열이 출력되었을 때 폭과 높이 정보를 얻는다.
-		::GetTextExtentPoint(mh_mem_dc, m_str, m_str.GetLength(), &temp_size);
-
 		if (m_cur_caret_pos < m_str.GetLength())
 		{
 			SIZE temp_size;
-			wchar_t b[2] = { 0 };
+			wchar_t b[3] = { 0 };
 			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos));// 이원test종(*/13->)
 			::GetTextExtentPoint(mh_mem_dc, b, 1, &temp_size);
+
+		#if(_DEBUG)
+				wchar_t uniStr[1024] = { 0 };
+				wsprintf(uniStr, L"%c (w: %d) (h: %d)\n", m_str.GetAt(m_cur_caret_pos), temp_size.cx, temp_size.cy);
+				OutputDebugString(uniStr);
+		#endif
+
 			m_caret_x += temp_size.cx;
-			// 계산된 캐럿의 위치에 캐럿이 이동하게 한다.
 			::SetCaretPos(m_caret_x - 2, m_caret_y);
 			m_cur_caret_pos++;
 		}
 	}
 	else if (nChar == 229)
 	{
-		//AfxMessageBox(L"han", 0);
-		SetCurrentInputMode(GetCurrentInputMode());
+		if (20447233 == MAKELPARAM(nRepCnt, nFlags))
+		{
+			SetCurrentInputMode(GetCurrentInputMode());
+		}
+		else {
+			wchar_t *uniStr = NULL;
+			AsciiToUnicode((char *)&nChar, uniStr);
+
+			CString s;
+			s.Format(L"[else if (nChar == 229)] [%c] \n", uniStr);
+			OutputDebugString(s);
+			
+		}
 	}
 
 	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
 }
+
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+

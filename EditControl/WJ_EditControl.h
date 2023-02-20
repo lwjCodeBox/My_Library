@@ -41,6 +41,15 @@ protected:
 	void Activity_EditControl_Color();
 	void Disabled_EditControl_Color();
 
+	inline int UnicodeToAscii(wchar_t *ap_src_str, char *ap_dest_str)
+	{
+		int len = WideCharToMultiByte(CP_ACP, 0, ap_src_str, -1, NULL, 0, NULL, NULL);
+		if (ap_dest_str != NULL) {
+			WideCharToMultiByte(CP_ACP, 0, ap_src_str, -1, ap_dest_str, len, NULL, NULL);
+		}
+		return len - 1;
+	}
+
 	inline int AsciiToUnicode(char *ap_src_str, wchar_t *ap_dest_str)
 	{
 		// 이 함수는 \0 까지 포함한 크기가 반환됨
@@ -49,7 +58,8 @@ protected:
 		return len - 1;
 	}
 
-	int  CopyTextFromClipboard(CString *ap_string);
+	void CopyTextW(CString a_str);
+	int PasteTextW(CString *ap_string);
 	void WriteToEditCtrl(CString ap_string);
 
 public:
