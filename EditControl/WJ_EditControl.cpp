@@ -23,6 +23,7 @@ BEGIN_MESSAGE_MAP(WJ_EditControl, CWnd)
 	ON_WM_KILLFOCUS()
 	ON_WM_LBUTTONDOWN()
 	ON_WM_NCPAINT()
+	ON_WM_KEYUP()
 END_MESSAGE_MAP()
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
@@ -329,20 +330,27 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 	GetKeyboardState(m_key_state);
 	// 현재 키 상태를 기반으로 입력된 문자 값을 얻는다.
 	ToAscii(nChar, MAKELPARAM(nRepCnt, nFlags), m_key_state, &key_data, 0);
+	
+	CString s;
+	s.Format(L"onKeyDown() [nChar: %d] [nRepCnt: %d] [nFlags: %d][key_data: %d]\n", nChar, nRepCnt, nFlags, key_data);
+	OutputDebugString(s);
 
-	// [Paste] Control + V
-	if (::GetKeyState(VK_CONTROL) < 0 && nChar == 86)
-	{
-		CString temp_str;
-		PasteTextW(&temp_str);   // 클립보드에 복사된 문자열을 가져온다.
-
-		m_str += temp_str;					// 입력된 문자를 문자열에 추가한다.
-		WriteToEditCtrl(m_str);
+	if (::GetKeyState(VK_LSHIFT) < 0 || ::GetKeyState(VK_RSHIFT) < 0) {
+		m_shift = true;
 	}
-	// [Paste] Control + C
-	else if (::GetKeyState(VK_CONTROL) < 0 && nChar == 67)
+
+	
+	if (::GetKeyState(VK_CONTROL) < 0)
 	{
-		CopyTextW(m_str);
+		if (nChar == 67)		// [Paste] Control + C
+			CopyTextW(m_str);
+		else if (nChar == 86)	// [Paste] Control + V
+		{
+			CString temp_str;
+			PasteTextW(&temp_str);	// 클립보드에 복사된 문자열을 가져온다.
+			m_str += temp_str;		// 입력된 문자를 문자열에 추가한다.
+			WriteToEditCtrl(m_str);
+		}
 	}
 	// 입력된 문자가 있는 지 확인, Shift 키 입력시에는 0으로 처리됨 
 	// push ESC key(27)
@@ -363,13 +371,14 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 
 		WriteToEditCtrl(m_str);
 	}
-	else if (nChar == VK_LEFT) // 방향키 (<-)
+	// 방향키 (<-)
+	else if (nChar == VK_LEFT) 
 	{
 		if (m_cur_caret_pos != 0)
 		{
 			SIZE temp_size;
 			wchar_t b[3] = { 0 };
-			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos - 1));// 이원test종(*/13->)
+			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos - 1));
 			::GetTextExtentPoint(mh_mem_dc, b, 1, &temp_size);
 
 			#if(_DEBUG)
@@ -383,13 +392,14 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 			m_cur_caret_pos--;
 		}
 	}
-	else if (nChar == VK_RIGHT) // 방향test키 (->)
+	// 방향test키 (->)
+	else if (nChar == VK_RIGHT) 
 	{
 		if (m_cur_caret_pos < m_str.GetLength())
 		{
 			SIZE temp_size;
 			wchar_t b[3] = { 0 };
-			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos));// 이원test종(*/13->)
+			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos));
 			::GetTextExtentPoint(mh_mem_dc, b, 1, &temp_size);
 
 		#if(_DEBUG)
@@ -424,3 +434,20 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+void WJ_EditControl::OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags)
+{
+	WORD key_data = 0;
+	// 현재 키보드의 키 상태를 얻는다.
+	GetKeyboardState(m_key_state);
+	// 현재 키 상태를 기반으로 입력된 문자 값을 얻는다.
+	ToAscii(nChar, MAKELPARAM(nRepCnt, nFlags), m_key_state, &key_data, 0);
+
+	CString s;
+	s.Format(L"onKeyDown() [nChar: %d] [nRepCnt: %d] [nFlags: %d][key_data: %d]\n\n", nChar, nRepCnt, nFlags, key_data);
+	OutputDebugString(s);
+
+	m_shift = false;
+
+	CWnd::OnKeyUp(nChar, nRepCnt, nFlags);
+}

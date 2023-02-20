@@ -29,6 +29,7 @@ protected:
 	int m_cur_caret_pos = 0;// 현재 캐럿의 위치
 	int m_text_cy;			// 문자 높이 위치
 
+	bool m_capital = false, m_numLock = false, m_shift = false;
 public:
 	WJ_EditControl();
 	virtual ~WJ_EditControl();
@@ -71,6 +72,7 @@ public:
 	afx_msg void OnKillFocus(CWnd *pNewWnd);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnNcPaint();
+	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
 };
 
 #endif
