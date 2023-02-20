@@ -25,8 +25,8 @@ protected:
 	CString m_str;			// 입력 문자열을 저장할 문자열 객체
 	int m_caret_x = 5;		// 현재 캐럿의 x축 위치
 	int m_caret_y;			// 현재 캐럿의 y축 위치
-	int m_font_width;		// 문자 너비
-	int m_font_height;		// 문자 높이
+	int m_caret_height;		// 현재 캐럿의 높이
+	int m_cur_caret_pos = 0;// 현재 캐럿의 위치
 	int m_text_cy;			// 문자 높이 위치
 
 public:
@@ -40,6 +40,17 @@ protected:
 	void SetCurrentInputMode(BOOL parm_mode);
 	void Activity_EditControl_Color();
 	void Disabled_EditControl_Color();
+
+	inline int AsciiToUnicode(char *ap_src_str, wchar_t *ap_dest_str)
+	{
+		// 이 함수는 \0 까지 포함한 크기가 반환됨
+		int len = MultiByteToWideChar(CP_ACP, 0, ap_src_str, -1, NULL, 0);
+		if (ap_dest_str != NULL) MultiByteToWideChar(CP_ACP, 0, ap_src_str, -1, ap_dest_str, len);
+		return len - 1;
+	}
+
+	int  CopyTextFromClipboard(CString *ap_string);
+	void WriteToEditCtrl(CString ap_string);
 
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
