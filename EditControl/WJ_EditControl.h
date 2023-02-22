@@ -2,7 +2,7 @@
 #define _WJ_EDIT_CONTROLH_
 
 /*
-	* Version : 1.0
+	* Version : 1.1
 	* 속성 -> 추가 디렉토리
 		프로젝트 소스 위치 추가. (#include "pch.h" 때문에 함.)
 		ex) C:\Users\lwj79\Desktop\My_Workspace\_MFC\Raon_Helper\Raon_Helper;
@@ -61,7 +61,7 @@ protected:
 
 	void CopyTextW(CString a_str);
 	int PasteTextW(CString *ap_string);
-	void WriteToEditCtrl(CString ap_string);
+	void WriteToEditCtrl(wchar_t *ap_string);
 
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
@@ -72,7 +72,7 @@ public:
 	afx_msg void OnKillFocus(CWnd *pNewWnd);
 	afx_msg void OnLButtonDown(UINT nFlags, CPoint point);
 	afx_msg void OnNcPaint();
-	afx_msg void OnKeyUp(UINT nChar, UINT nRepCnt, UINT nFlags);
+	virtual LRESULT DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam);
 };
 
 #endif
