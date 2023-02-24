@@ -120,6 +120,12 @@ int WJ_EditControl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	m_caret_y = (int)temp_size.cy / 5;
 	m_text_cy = m_caret_y + 1;
+	
+	// 캐럿 위치 정보를 저장 하기 위해 노드 생성.
+	caret_pos_list *m_cp_newNode = SLL_CreateNode(m_caret_x);
+	SLL_AppendNode(&m_cp_list, m_cp_newNode);
+	SLL_ShowAllData(m_cp_list);
+	
 	return 0;
 }
 
@@ -127,6 +133,9 @@ int WJ_EditControl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void WJ_EditControl::OnDestroy()
 {
 	CWnd::OnDestroy();
+
+	// 캐럿 위치 정보를 담고 있는 노드를 파괴한다.
+	SLL_DestroyAllNode(m_cp_list);
 
 	// 이미지 객체에 그림 그리기에 사용하던 DC 핸들값을 반납한다.
 	m_mem_image.ReleaseDC();
@@ -210,11 +219,11 @@ void WJ_EditControl::Activity_EditControl_Color()
 	m_caret_x = 5 + temp_size.cx;
 
 	// 캐럿 위치 저장
-	m_cur_caret_pos = m_str.GetLength();
+	m_caret_index = m_str.GetLength();
 	// 폭이 1이고 높이가 18인 캐럿을 생성한다.
 	::CreateCaret(m_hWnd, NULL, 1, m_caret_height);
 	// 생성된 캐럿의 위치를 지정한다.
-	::SetCaretPos(m_caret_x - 2, m_caret_y);
+	::SetCaretPos(m_caret_x, m_caret_y);
 	// 캐럿을 화면에 표시한다.
 	::ShowCaret(m_hWnd);
 }
@@ -318,57 +327,183 @@ void WJ_EditControl::WriteToEditCtrl(wchar_t *ap_string)
 	// 캐럿을 출력된 문자열 뒤에 위치하도록 위치를 조정한다.
 	m_caret_x = 5 + temp_size.cx;
 	// 계산된 캐럿의 위치에 캐럿이 이동하게 한다.
-	::SetCaretPos(m_caret_x - 2, m_caret_y);
+	::SetCaretPos(m_caret_x, m_caret_y);
 
-	m_cur_caret_pos = len;
+	DbgLogW(L"OnKeyDown() - %c (w: %d) (h: %d) (cur pos: %d)\n", m_str.GetAt(m_caret_index), temp_size.cx, temp_size.cy, m_caret_x);
+				 
+	// 캐럿 위치 정보를 저장 하기 위해 노드 생성.
+	caret_pos_list *m_cp_newNode = SLL_CreateNode(m_caret_x);
+	SLL_AppendNode(&m_cp_list, m_cp_newNode);
+	SLL_ShowAllData(m_cp_list);
+
+	m_caret_index = len;
 }
 
 //-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+void WJ_EditControl::EraseStrFromEditCtrl(wchar_t *ap_string, int a_start_idx/* = 0*/, int a_end_idx/* = 0*/)
+{
+	if (a_start_idx == 0) return;
+	
+	SetDCBrushColor(mh_mem_dc, RGB(56, 56, 56));
+	Rectangle(mh_mem_dc, -2, -1, m_mem_image.GetWidth() + 1, m_mem_image.GetHeight() + 1);
+
+	int len = m_str.GetLength();
+
+	// 캐럿 갯수 줄임.
+	m_caret_index--;
+
+	// 캐럿 정보 삭제
+	DbgLogW(L"Erase before\n\n");
+	SLL_ShowAllData(m_cp_list);
+	caret_pos_list *p = NULL;
+	// TODO: 삭제
+	for (int i = len; i > a_start_idx; --i)
+	{
+		int n = 0;
+		n = SLL_GetNodeAt(m_cp_list, i - 1)->Data;
+		SLL_GetNodeAt(m_cp_list, i)->Data = n;
+	}
+	DbgLogW(L"Erase after\n\n");
+	SLL_RemoveNode(&m_cp_list, a_start_idx);
+	SLL_ShowAllData(m_cp_list);
+
+	
+
+
+	// 맨 뒤에 있는 문자열 삭제
+	m_str.Delete(m_caret_index);
+
+	// 입력된 문자는 노란색으로 출력한다.
+	SetTextColor(mh_mem_dc, RGB(255, 255, 0));
+	// 입력된 문자를 화면에 출력한다.
+	TextOut(mh_mem_dc, TEXT_X_POS, m_text_cy, m_str, len);
+	// 화면을 갱신하여 입력된 문자가 화면에 표시되게 한다.
+	Invalidate(0);
+
+	SIZE temp_size;
+	// 문자열이 출력되었을 때 폭과 높이 정보를 얻는다.
+	::GetTextExtentPoint(mh_mem_dc, m_str, len, &temp_size);
+	// 캐럿을 출력된 문자열 뒤에 위치하도록 위치를 조정한다.
+	m_caret_x = SLL_GetNodeAt(m_cp_list, m_caret_index)->Data;
+	// 계산된 캐럿의 위치에 캐럿이 이동하게 한다.
+	::SetCaretPos(m_caret_x, m_caret_y);
+
+	
+
+
+	DbgLogW(L"EraseStrFromEditCtrl() - (cur pos: %d)\n", m_caret_x);
+}
+//-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 {
+	// TODO: 방향키 (<-)
 	// 방향키 (<-)
 	if (nChar == VK_LEFT)
 	{
-		if (m_cur_caret_pos != 0)
-		{
-			SIZE temp_size;
-			wchar_t b[3] = { 0 };
-			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos - 1));
-			::GetTextExtentPoint(mh_mem_dc, b, 1, &temp_size);
+		SetDCBrushColor(mh_mem_dc, RGB(56, 56, 56));
+		Rectangle(mh_mem_dc, -2, -1, m_mem_image.GetWidth() + 1, m_mem_image.GetHeight() + 1);
 
+		int len = m_str.GetLength();
+
+		// 입력된 문자는 노란색으로 출력한다.
+		SetTextColor(mh_mem_dc, RGB(255, 255, 0));
+		// 입력된 문자를 화면에 출력한다.
+		TextOut(mh_mem_dc, TEXT_X_POS, m_text_cy, m_str, len);
+		// 화면을 갱신하여 입력된 문자가 화면에 표시되게 한다.
+		Invalidate(0);
+
+		if (m_caret_index != 0)
+		{
+			if (!(::GetKeyState(VK_LSHIFT) < 0 || ::GetKeyState(VK_RSHIFT) < 0))
+			{
+				DbgLogW(L"left key\n");
+
+				SIZE temp_size;
+				wchar_t b[3] = { 0 };
+				wsprintf(b, L"%c", m_str.GetAt(m_caret_index - 1));
+				::GetTextExtentPoint(mh_mem_dc, b, 1, &temp_size);
+
+				m_caret_x -= temp_size.cx;
 #if(_DEBUG)
-			wchar_t uniStr[1024] = { 0 };
-			wsprintf(uniStr, L"OnKeyDown() - %c (w: %d) (h: %d)\n", m_str.GetAt(m_cur_caret_pos - 1), temp_size.cx, temp_size.cy);
-			OutputDebugString(uniStr);
+				DbgLogW(L"OnKeyDown() - %c (w: %d) (h: %d) (cur pos: %d)\n", m_str.GetAt(m_caret_index - 1), temp_size.cx, temp_size.cy, m_caret_x);
 #endif
 
-			m_caret_x -= temp_size.cx;
-			::SetCaretPos(m_caret_x - 2, m_caret_y);
-			m_cur_caret_pos--;
+				::SetCaretPos(m_caret_x, m_caret_y);
+				::ShowCaret(m_hWnd);
+				m_caret_index--;
+			}
+			else // shift + left key
+			{
+				DbgLogW(L"shift + left key\n");
+
+				caret_pos_list *node = SLL_GetNodeAt(m_cp_list, m_caret_index);
+				
+				DbgLogW(L"%d \n", node->Data);
+
+				SetDCBrushColor(mh_mem_dc, RGB(150, 100, 150));
+				Rectangle(mh_mem_dc, -2, -1, m_mem_image.GetWidth() + 1, m_mem_image.GetHeight() + 1);
+
+				
+				
+				int len = m_str.GetLength();
+
+				// 입력된 문자는 노란색으로 출력한다.
+				SetTextColor(mh_mem_dc, RGB(255, 255, 0));
+				// 입력된 문자를 화면에 출력한다.
+				TextOut(mh_mem_dc, TEXT_X_POS, m_text_cy, m_str, len);
+				Invalidate(0);
+				
+				SIZE temp_size;
+				wchar_t b[3] = { 0 };
+				wsprintf(b, L"%c", m_str.GetAt(m_caret_index - 1));
+				::GetTextExtentPoint(mh_mem_dc, b, 1, &temp_size);
+
+				//if (1)
+				//{
+				//	SetDCBrushColor(mh_mem_dc, RGB(150, 100, 150)); // 핑크색
+				//	Rectangle(mh_mem_dc, -2, -1, temp_size.cx, m_caret_height);		
+				//}
+
+				m_caret_x -= temp_size.cx;
+				::SetCaretPos(m_caret_x, m_caret_y);
+				::HideCaret(m_hWnd);
+				m_caret_index--;
+			}
 		}
 	}
+	// TODO: 방향키 (->)
 	// 방향test키 (->)
 	else if (nChar == VK_RIGHT)
 	{
-		if (m_cur_caret_pos < m_str.GetLength())
+		SetDCBrushColor(mh_mem_dc, RGB(56, 56, 56));
+		Rectangle(mh_mem_dc, -2, -1, m_mem_image.GetWidth() + 1, m_mem_image.GetHeight() + 1);
+
+		int len = m_str.GetLength();
+
+		// 입력된 문자는 노란색으로 출력한다.
+		SetTextColor(mh_mem_dc, RGB(255, 255, 0));
+		// 입력된 문자를 화면에 출력한다.
+		TextOut(mh_mem_dc, TEXT_X_POS, m_text_cy, m_str, len);
+		// 화면을 갱신하여 입력된 문자가 화면에 표시되게 한다.
+		Invalidate(0);
+		
+		if (/*m_caret_index < m_str.GetLength()*/SLL_GetNodeAt(m_cp_list, m_caret_index)->NextNode)
 		{
 			SIZE temp_size;
 			wchar_t b[3] = { 0 };
-			wsprintf(b, L"%c", m_str.GetAt(m_cur_caret_pos));
+			wsprintf(b, L"%c", m_str.GetAt(m_caret_index));
 			::GetTextExtentPoint(mh_mem_dc, b, 1, &temp_size);
 
+			m_caret_x += temp_size.cx;
 #if(_DEBUG)
-			wchar_t uniStr[1024] = { 0 };
-			wsprintf(uniStr, L"OnKeyDown() - %c (w: %d) (h: %d)\n", m_str.GetAt(m_cur_caret_pos), temp_size.cx, temp_size.cy);
-			OutputDebugString(uniStr);
+			DbgLogW(L"OnKeyDown() - %c (w: %d) (h: %d) (cur pos: %d)\n", m_str.GetAt(m_caret_index), temp_size.cx, temp_size.cy, m_caret_x);
 #endif
 
-			m_caret_x += temp_size.cx;
-			::SetCaretPos(m_caret_x - 2, m_caret_y);
-			m_cur_caret_pos++;
+			::SetCaretPos(m_caret_x, m_caret_y);
+			::ShowCaret(m_hWnd);
+			m_caret_index++;
 		}
 	}
-	else if (nChar == VK_LMENU || nChar == VK_RMENU) { SetCurrentInputMode(GetCurrentInputMode()); }
 
 	CWnd::OnKeyDown(nChar, nRepCnt, nFlags);
 }
@@ -377,13 +512,11 @@ void WJ_EditControl::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
 LRESULT WJ_EditControl::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
 	if (message == WM_IME_STARTCOMPOSITION)
-		OutputDebugString(L"WM_IME_STARTCOMPOSITION\n");
+		DbgLogW(L"WM_IME_STARTCOMPOSITION\n");
 	else if (message == WM_IME_ENDCOMPOSITION)
-		OutputDebugString(L"WM_IME_ENDCOMPOSITION\n");
+		DbgLogW(L"WM_IME_ENDCOMPOSITION\n");
 	else if (message == WM_IME_COMPOSITION) {
-		CString s;
-		s.Format(L"WM_IME_COMPOSITION - [hwnd: 0x%X] [message: 0x%X] [wParam: 0x%X] [lParam: 0x%X]\n", m_hWnd, message, wParam, lParam);
-		OutputDebugString(s);
+		DbgLogW(L"WM_IME_COMPOSITION - [hwnd: 0x%X] [message: 0x%X] [wParam: 0x%X] [lParam: 0x%X]\n", m_hWnd, message, wParam, lParam);
 
 		int len = 0;
 		wchar_t uniStr[4] = { 0 };
@@ -428,13 +561,7 @@ LRESULT WJ_EditControl::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam
 		// 현재 키 상태를 기반으로 입력된 문자 값을 얻는다.
 		ToAscii(wParam, lParam, m_key_state, &key_data, 0);
 
-		CString s;
-		s.Format(L"DefWindowProc - [hwnd: 0x%X] [message: 0x%X] [wParam: 0x%X] [lParam: 0x%X]\n", m_hWnd, message, wParam, lParam);
-		OutputDebugString(s);
-
-		if (::GetKeyState(VK_LSHIFT) < 0 || ::GetKeyState(VK_RSHIFT) < 0) {
-			m_shift = true;
-		}
+		DbgLogW(L"DefWindowProc - [hwnd: 0x%X] [message: 0x%X] [wParam: 0x%X] [lParam: 0x%X]\n", m_hWnd, message, wParam, lParam);
 
 		if (::GetKeyState(VK_CONTROL) < 0)
 		{
@@ -451,26 +578,26 @@ LRESULT WJ_EditControl::DefWindowProc(UINT message, WPARAM wParam, LPARAM lParam
 		
 		// 입력된 문자가 있는 지 확인, Shift 키 입력시에는 0으로 처리됨 
 		// push ESC key(27)
-		else if (key_data != 0 && key_data != 27)
+		else if (key_data != 0 && key_data != 27 && key_data != VK_BACK)
 		{
 			// 배경을 검은색으로 채워서 이전 내용을 지운다.
 			Rectangle(mh_mem_dc, -2, -1, m_mem_image.GetWidth() + 1, m_mem_image.GetHeight() + 1); //Rectangle(mh_mem_dc, 0, 0, m_mem_image.GetWidth(), m_mem_image.GetHeight());
 
-			if (key_data == VK_BACK) // push Backspace key
-				m_str.Delete(m_str.GetLength() - 1);
-			else
-			{
-				m_str += (char)key_data;  // 입력된 문자를 문자열에 추가한다.				
-			}
-
+			m_str += (char)key_data;  // 입력된 문자를 문자열에 추가한다.				
 			WriteToEditCtrl(m_str.GetBuffer());
+		}
+		// TODO: push Backspace key
+		else if (key_data == VK_BACK && m_caret_index != 0)
+		{
+			EraseStrFromEditCtrl(m_str.GetBuffer(), m_caret_index);
 		}
 	}
 
 
 	else if (message == WM_KEYUP) 
 	{
-		m_shift = false;
+
 	}
+
 	return CWnd::DefWindowProc(message, wParam, lParam);
 }
