@@ -6,11 +6,31 @@
 	* 속성 -> 추가 디렉토리
 		프로젝트 소스 위치 추가. (#include "pch.h" 때문에 함.)
 		ex) C:\Users\lwj79\Desktop\My_Workspace\_MFC\Raon_Helper\Raon_Helper;
+
 */
+
+#include "LinkedList.h" 
 
 #include <imm.h>
 #pragma comment(lib, "imm32.lib")
-#define TEXT_X_POS	3
+#define TEXT_X_POS	5
+
+typedef Node caret_pos_list;
+
+static void DbgLogW(const wchar_t *ap_str, ...)
+{
+	wchar_t pBuf[1024] = { 0, };
+
+	va_list args;
+	va_start(args, ap_str);
+
+	int len = _vscwprintf(ap_str, args) + 1;
+	int size = vswprintf(pBuf, len, ap_str, args);
+	
+	OutputDebugStringW(pBuf);
+
+	va_end(args);
+}
 
 // WJ_EditControl
 class WJ_EditControl : public CWnd
@@ -26,8 +46,10 @@ protected:
 	int m_caret_x = 5;		// 현재 캐럿의 x축 위치
 	int m_caret_y;			// 현재 캐럿의 y축 위치
 	int m_caret_height;		// 현재 캐럿의 높이
-	int m_cur_caret_pos = 0;// 현재 캐럿의 위치
+	int m_caret_index = 0;  // 현재 캐럿의 위치
 	int m_text_cy;			// 문자 높이 위치
+
+	caret_pos_list *m_cp_list = NULL;
 
 	bool m_capital = false, m_numLock = false, m_shift = false;
 public:
@@ -62,6 +84,7 @@ protected:
 	void CopyTextW(CString a_str);
 	int PasteTextW(CString *ap_string);
 	void WriteToEditCtrl(wchar_t *ap_string);
+	void EraseStrFromEditCtrl(wchar_t *ap_string, int a_start_idx= 0, int a_end_idx = 0);
 
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
