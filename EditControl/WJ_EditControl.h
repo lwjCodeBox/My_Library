@@ -9,6 +9,7 @@
 
 */
 
+#include <iostream>
 #include "LinkedList.h" 
 
 #include <imm.h>
@@ -42,7 +43,7 @@ protected:
 
 	BYTE m_key_state[256];	// 현재 키 상태를 기억할 변수
 	HFONT mh_font;			// 출력할 문자열에 사용할 글꼴
-	CString m_str;			// 입력 문자열을 저장할 문자열 객체
+	std::wstring m_str;			// 입력 문자열을 저장할 문자열 객체
 	int m_caret_x = 5;		// 현재 캐럿의 x축 위치
 	int m_caret_y;			// 현재 캐럿의 y축 위치
 	int m_caret_height;		// 현재 캐럿의 높이
@@ -64,7 +65,7 @@ protected:
 	void Activity_EditControl_Color();
 	void Disabled_EditControl_Color();
 
-	inline int UnicodeToAscii(wchar_t *ap_src_str, char *ap_dest_str)
+	inline int UnicodeToAscii(const wchar_t *ap_src_str, char *ap_dest_str)
 	{
 		int len = WideCharToMultiByte(CP_ACP, 0, ap_src_str, -1, NULL, 0, NULL, NULL);
 		if (ap_dest_str != NULL) {
@@ -81,10 +82,11 @@ protected:
 		return len - 1;
 	}
 
-	void CopyTextW(CString a_str);
-	int PasteTextW(CString *ap_string);
-	void WriteToEditCtrl(wchar_t *ap_string);
-	void EraseStrFromEditCtrl(wchar_t *ap_string, int a_start_idx= 0, int a_end_idx = 0);
+	void CopyTextW(std::wstring a_str);
+	int PasteTextW(std::wstring *ap_string);
+	void WriteToEditCtrl(const wchar_t *ap_string);
+	void WriteHangeulToEditCtrl(const wchar_t *ap_string, LPARAM lParam);
+	void EraseStrFromEditCtrl(const wchar_t *ap_string, int a_start_idx= 0, int a_end_idx = 0);
 
 public:
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
